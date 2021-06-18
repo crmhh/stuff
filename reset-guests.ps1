@@ -3,7 +3,6 @@ Uninstall-Module AzureADPreview
 Install-Module AzureADPreview
 Connect-AzureAD
 
-# Var def
 $mydomain = "*example*"
 $myguests = Get-AzureADUser -All 1| Where-Object {$_.Usertype -eq "Guest"} | Where-Object {$_.UserPrincipalName -like $mydomain}
 foreach ($guest in $myguests) {
