@@ -6,6 +6,7 @@ Connect to App registrations and Export Azure AD SignInActivity
 .NOTES
 Create by Daniel Aldén
 https://cloudtech.nu/2020/05/03/export-azure-ad-last-logon-with-powershell-graph-api/
+modifed by Chris Brumm to sort by date
 #>
  
 # Application (client) ID, Directory (tenant) ID, and secret
