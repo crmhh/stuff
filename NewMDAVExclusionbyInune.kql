@@ -1,0 +1,5 @@
+IntuneAuditLogs 
+| extend Config = tostring(parse_json(tostring(parse_json(tostring(parse_json(Properties).Targets))[0].ModifiedProperties))[1].New)
+| where Config == ```deviceConfiguration--windows10EndpointProtectionConfiguration_defenderFilesAndFoldersToExclude```
+| project SourceSystem, TimeGenerated, OperationName, Identity, Config
+
