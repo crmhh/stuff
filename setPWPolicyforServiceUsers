@@ -1,0 +1,219 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "For_each_-_ServiceUser": {
+                "actions": {
+                    "Condition_-_PWPolicy_already_set": {
+                        "actions": {
+                            "HTTP_-_Set_PWPolicy": {
+                                "inputs": {
+                                    "authentication": {
+                                        "audience": "https://graph.microsoft.com",
+                                        "type": "ManagedServiceIdentity"
+                                    },
+                                    "body": {
+                                        "passwordPolicies": "DisablePasswordExpiration"
+                                    },
+                                    "headers": {
+                                        "Content-Type\t": "application/json"
+                                    },
+                                    "method": "PATCH",
+                                    "uri": "https://graph.microsoft.com/v1.0/users/@{items('For_each_-_ServiceUser')?['userPrincipalName']}"
+                                },
+                                "runAfter": {},
+                                "type": "Http"
+                            }
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@body('Parse_JSON_2')?['passwordPolicies']",
+                                            "DisablePasswordExpiration"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "runAfter": {
+                            "Parse_JSON_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "If"
+                    },
+                    "HTTP_-_Get_User": {
+                        "inputs": {
+                            "authentication": {
+                                "audience": "https://graph.microsoft.com",
+                                "type": "ManagedServiceIdentity"
+                            },
+                            "method": "GET",
+                            "uri": "https://graph.microsoft.com/v1.0/users/@{items('For_each_-_ServiceUser')?['userPrincipalName']}?$select=userprincipalname,passwordPolicies"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                    },
+                    "Parse_JSON_2": {
+                        "inputs": {
+                            "content": "@body('HTTP_-_Get_User')",
+                            "schema": {
+                                "properties": {
+                                    "@@odata.context": {
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "items": {
+                                            "properties": {
+                                                "@@odata.id": {
+                                                    "type": "string"
+                                                },
+                                                "passwordPolicies": {
+                                                    "type": "string"
+                                                },
+                                                "userPrincipalName": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "@@odata.id",
+                                                "userPrincipalName",
+                                                "passwordPolicies"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "HTTP_-_Get_User": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    }
+                },
+                "foreach": "@body('Parse_JSON')?['value']",
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "HTTP_-_Get_ServiceUser": {
+                "inputs": {
+                    "authentication": {
+                        "audience": "https://graph.microsoft.com",
+                        "type": "ManagedServiceIdentity"
+                    },
+                    "method": "GET",
+                    "uri": "https://graph.microsoft.com/v1.0/groups/@{variables('ServiceUser')}/members"
+                },
+                "runAfter": {
+                    "Initialize_variable_-_ServiceUser": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "Initialize_variable_-_ServiceUser": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ServiceUser",
+                            "type": "string",
+                            "value": "YOURGUID"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Parse_JSON": {
+                "inputs": {
+                    "content": "@body('HTTP_-_Get_ServiceUser')",
+                    "schema": {
+                        "properties": {
+                            "@@odata.context": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "items": {
+                                    "properties": {
+                                        "@@odata.id": {
+                                            "type": "string"
+                                        },
+                                        "@@odata.type": {
+                                            "type": "string"
+                                        },
+                                        "businessPhones": {
+                                            "type": "array"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "givenName": {},
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "jobTitle": {},
+                                        "mail": {},
+                                        "mobilePhone": {},
+                                        "officeLocation": {},
+                                        "preferredLanguage": {},
+                                        "surname": {},
+                                        "userPrincipalName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "@@odata.type",
+                                        "@@odata.id",
+                                        "id",
+                                        "businessPhones",
+                                        "displayName",
+                                        "givenName",
+                                        "jobTitle",
+                                        "mail",
+                                        "mobilePhone",
+                                        "officeLocation",
+                                        "preferredLanguage",
+                                        "surname",
+                                        "userPrincipalName"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "HTTP_-_Get_ServiceUser": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "kind": "Stateful"
+}
