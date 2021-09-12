@@ -1,0 +1,1 @@
+get-aduser -filter * -properties Name, PasswordNeverExpires, msExchRemoteRecipientType | where {($_.enabled -eq 'true') -and ($_.passwordNeverExpires -eq "true") -and ($_.msExchRemoteRecipientType -like "1")} | select Name
